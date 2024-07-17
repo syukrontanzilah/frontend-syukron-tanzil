@@ -1,9 +1,8 @@
 "use client"
 import axios from "axios";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { CountryType, HarborType, ProductType } from "./DataType";
-import { NumberFormatBase, NumericFormat } from "react-number-format";
+import { NumericFormat } from "react-number-format";
 import { IoCart } from "react-icons/io5";
 
 
@@ -11,21 +10,13 @@ export default function Home() {
   const [listCountry, setListCountry] = useState<CountryType[]>([])
   const [countryName, setCountryName] = useState("");
   const [countryId, setCountryId] = useState(0)
-  const [countryCode, setCountryCode] = useState("")
-
   const [listHarbor, setListHarbor] = useState<HarborType[]>([])
   const [harbourName, setHarbourName] = useState("");
   const [harbourId, setHarbourId] = useState("");
-
   const [listProduct, setListProduct] = useState<ProductType[]>([])
   const [productName, setProductName] = useState("")
   const [productId, setProductId] = useState(0);
-  const [description, setDescription] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [price, setPrice] = useState(0);
   const [loadingProduct, setLoadingProduct] = useState(false)
-  const [showDesc, setShowDesc] = useState(false);
-
   const URLNegara = `http://202.157.176.100:3000/negaras`
   const URLPelabuhan = `http://202.157.176.100:3000/pelabuhans`
   const URLBarang = `http://202.157.176.100:3000/barangs`
@@ -89,7 +80,6 @@ export default function Home() {
     countryId, 
     harbourId, 
     productId,
-    showDesc
   ])
 
   return (
@@ -105,8 +95,6 @@ export default function Home() {
             return element.nama_negara === e.target.value;
           })[0];
           setCountryId(name.id_negara)
-          // console.log('id negara', countryId)
-          setShowDesc(false)
         }}
       >
         <option value={""} disabled>Pilih Negara..</option>
@@ -129,7 +117,6 @@ export default function Home() {
         })[0]
         setHarbourId(name.id_pelabuhan)
         console.log('id pelabuhan', harbourId)
-        // setShowDesc(false)
       }}
       >
       <option value={""} disabled>Pilih Pelabuhan..</option>
@@ -159,7 +146,7 @@ export default function Home() {
           listProduct.map((item,i)=> {
             return(
               <option key={i} value={item.nama_barang}> 
-              {item.nama_barang} 
+              {item.nama_barang}
               </option> 
             )
           })
@@ -167,12 +154,10 @@ export default function Home() {
       </select>
 
       {
-        // loadingProduct ?
-        // <div>Loading... </div> :
         productId ?
         listProduct.map((item,i)=> {
           return(
-            <div className="">
+            <div key={i} className="">
               <div>
                 <h5>Description</h5>
                 <div className="description">
