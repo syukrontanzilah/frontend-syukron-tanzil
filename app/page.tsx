@@ -1,113 +1,214 @@
+"use client"
+import axios from "axios";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+type CountryType = {
+  id_negara: number
+  kode_negara: string
+  nama_negara: string
+}
+
+type HarborType = {
+  id_negara: string
+  id_pelabuhan: string
+  nama_pelabuhan: string
+}
+
+type ProductType = {
+  id_barang: number
+  id_pelabuhan: number
+  nama_barang: string
+  description: string
+  harga: number
+  diskon: number
+}
 
 export default function Home() {
+  const [listCountry, setListCountry] = useState<CountryType[]>([])
+  const [countryName, setCountryName] = useState("");
+  const [countryId, setCountryId] = useState(0)
+  const [countryCode, setCountryCode] = useState("")
+
+  const [listHarbor, setListHarbor] = useState<HarborType[]>([])
+  const [harbourName, setHarbourName] = useState("");
+  const [harbourId, setHarbourId] = useState("");
+
+  const [listProduct, setListProduct] = useState<ProductType[]>([])
+  const [productName, setProductName] = useState("")
+  const [productId, setProductId] = useState(0);
+  const [description, setDescription] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [price, setPrice] = useState(0);
+
+  const URLNegara = `http://202.157.176.100:3000/negaras`
+  const URLPelabuhan = `http://202.157.176.100:3000/pelabuhans`
+  const URLBarang = `http://202.157.176.100:3000/barangs`
+
+  // get negara
+  const getNegara = async () => {
+    try{
+      await axios.get(URLNegara)
+      .then((data)=> {
+        // console.log(data.data)
+        const datanya = data.data
+        setListCountry(datanya)
+      })
+    }catch(error){
+      console.log(error)
+    }
+  }
+
+  // get pelabuhan
+  const filter = JSON.stringify({
+    where:{
+      id_negara: countryId
+    }
+  })
+  const getPelabuhan = async () => {
+    try{
+      await axios.get(`${URLPelabuhan}?filter=${encodeURIComponent(filter)}`)
+      .then((data)=> {
+        console.log("pelabuhan", data.data)
+        const datanya = data.data
+        setListHarbor(datanya)
+      })
+    } catch(error){
+      console.log(error)
+    }
+  }
+
+  // get barang
+  const filterBarang = JSON.stringify({
+    where:{
+      id_pelabuhan: harbourId
+    }
+  })
+
+  const getProduct = async () => {
+    try{
+      await axios.get(`${URLBarang}?filter=${encodeURIComponent(filterBarang)}`)
+      .then((data)=> {
+        console.log("barang", data.data)
+        const datanya = data.data
+        setListProduct(datanya)
+        console.log('description', datanya[0])
+        // setDescription(datanya[0].d)
+      })
+    }catch(error){
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    getNegara()
+    getPelabuhan()
+    getProduct()
+  },[
+    countryId, 
+    harbourId, 
+    productId,
+    description,
+    discount,
+    price
+  ])
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+    <main className="bg-slate-200 min-h-[100vh]">
+    <div className="w-full xl:w-[480px] bg-white mx-auto min-h-[100vh] p-6">
+    <form>
+    <h5>Negara</h5>
+      <select 
+        value={countryName}
+        onChange={(e)=> {
+          setCountryName(e.target.value);
+          var name = listCountry.filter(function(element){
+            return element.nama_negara === e.target.value;
+          })[0];
+          setCountryId(name.id_negara)
+          console.log('id negara', countryId)
+
+        }}
+      >
+        <option value={""} disabled>Pilih Negara..</option>
+        {
+        listCountry.map((item,i)=> {
+          return(
+            <option key={i} value={item.nama_negara}>{item.kode_negara} - {item.nama_negara}</option>
+          )
+        })
+      }
+      </select>
+
+      <h5>Pelabuhan</h5>
+      <select 
+      value={harbourName}
+      onChange={(e)=> {
+        setHarbourName(e.target.value);
+        var name = listHarbor.filter(function(element){
+          return element.nama_pelabuhan === e.target.value;
+        })[0]
+        setHarbourId(name.id_pelabuhan)
+        console.log('id pelabuhan', harbourId)
+      }}
+      >
+      <option value={""} disabled>Pilih Pelabuhan..</option>
+        {
+          listHarbor.map((item,i)=> {
+            return(
+              <option key={i} value={item.nama_pelabuhan}>{item.nama_pelabuhan}</option> 
+            )
+          })
+        }
+      </select>
+
+      <h5>Barang</h5>
+      <select 
+      value={productName}
+      onChange={(e)=> {
+        setProductName(e.target.value);
+        var name = listProduct.filter(function(element){
+          return element.nama_barang === e.target.value;
+        })[0]
+        setProductId(name.id_barang);
+        console.log('id barang', productId)
+        setDescription(name.description)
+        setDiscount(name.diskon)
+        setPrice(name.harga)
+      }}
+      >
+      <option value={""} disabled>Pilih barang..</option>
+        {
+          listProduct.map((item,i)=> {
+            return(
+              <option key={i} value={item.nama_barang}> 
+              {item.nama_barang} (id: {item.id_barang})</option> 
+            )
+          })
+        }
+      </select>
+
+      <h5>Description</h5>
+      <div>
+        {description}
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      <h5>Discount</h5>
+      <div>
+        {discount}%
       </div>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      <h5>Harga</h5>
+      <div>
+        {price}
       </div>
+
+      <h5>Total</h5>
+      <div>{price - discount/100 * price}</div>
+
+    </form>
+    </div>      
     </main>
+
   );
 }
