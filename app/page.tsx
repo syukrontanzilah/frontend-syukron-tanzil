@@ -2,27 +2,10 @@
 import axios from "axios";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { CountryType, HarborType, ProductType } from "./DataType";
+import { NumberFormatBase, NumericFormat } from "react-number-format";
+import { IoCart } from "react-icons/io5";
 
-type CountryType = {
-  id_negara: number
-  kode_negara: string
-  nama_negara: string
-}
-
-type HarborType = {
-  id_negara: string
-  id_pelabuhan: string
-  nama_pelabuhan: string
-}
-
-type ProductType = {
-  id_barang: number
-  id_pelabuhan: number
-  nama_barang: string
-  description: string
-  harga: number
-  diskon: number
-}
 
 export default function Home() {
   const [listCountry, setListCountry] = useState<CountryType[]>([])
@@ -40,6 +23,8 @@ export default function Home() {
   const [description, setDescription] = useState("");
   const [discount, setDiscount] = useState(0);
   const [price, setPrice] = useState(0);
+  const [loadingProduct, setLoadingProduct] = useState(false)
+  const [showDesc, setShowDesc] = useState(false);
 
   const URLNegara = `http://202.157.176.100:3000/negaras`
   const URLPelabuhan = `http://202.157.176.100:3000/pelabuhans`
@@ -50,7 +35,6 @@ export default function Home() {
     try{
       await axios.get(URLNegara)
       .then((data)=> {
-        // console.log(data.data)
         const datanya = data.data
         setListCountry(datanya)
       })
@@ -60,16 +44,11 @@ export default function Home() {
   }
 
   // get pelabuhan
-  const filter = JSON.stringify({
-    where:{
-      id_negara: countryId
-    }
-  })
+  const filter = JSON.stringify({where:{id_negara: countryId}});
   const getPelabuhan = async () => {
     try{
       await axios.get(`${URLPelabuhan}?filter=${encodeURIComponent(filter)}`)
       .then((data)=> {
-        console.log("pelabuhan", data.data)
         const datanya = data.data
         setListHarbor(datanya)
       })
@@ -79,24 +58,26 @@ export default function Home() {
   }
 
   // get barang
-  const filterBarang = JSON.stringify({
-    where:{
-      id_pelabuhan: harbourId
-    }
-  })
-
+  const filterBarang = JSON.stringify({ where:{id_pelabuhan: harbourId}});
   const getProduct = async () => {
+    setLoadingProduct(true)
     try{
       await axios.get(`${URLBarang}?filter=${encodeURIComponent(filterBarang)}`)
       .then((data)=> {
         console.log("barang", data.data)
         const datanya = data.data
-        setListProduct(datanya)
-        console.log('description', datanya[0])
-        // setDescription(datanya[0].d)
+        if(
+          harbourId !== null || 
+          harbourId !== "" || 
+          harbourId !== undefined 
+        ){
+          setListProduct(datanya)
+          setLoadingProduct(false)
+        }
       })
     }catch(error){
       console.log(error)
+      setLoadingProduct(false)
     }
   }
 
@@ -108,9 +89,7 @@ export default function Home() {
     countryId, 
     harbourId, 
     productId,
-    description,
-    discount,
-    price
+    showDesc
   ])
 
   return (
@@ -126,8 +105,8 @@ export default function Home() {
             return element.nama_negara === e.target.value;
           })[0];
           setCountryId(name.id_negara)
-          console.log('id negara', countryId)
-
+          // console.log('id negara', countryId)
+          setShowDesc(false)
         }}
       >
         <option value={""} disabled>Pilih Negara..</option>
@@ -150,6 +129,7 @@ export default function Home() {
         })[0]
         setHarbourId(name.id_pelabuhan)
         console.log('id pelabuhan', harbourId)
+        // setShowDesc(false)
       }}
       >
       <option value={""} disabled>Pilih Pelabuhan..</option>
@@ -172,9 +152,6 @@ export default function Home() {
         })[0]
         setProductId(name.id_barang);
         console.log('id barang', productId)
-        setDescription(name.description)
-        setDiscount(name.diskon)
-        setPrice(name.harga)
       }}
       >
       <option value={""} disabled>Pilih barang..</option>
@@ -182,30 +159,74 @@ export default function Home() {
           listProduct.map((item,i)=> {
             return(
               <option key={i} value={item.nama_barang}> 
-              {item.nama_barang} (id: {item.id_barang})</option> 
+              {item.nama_barang} 
+              </option> 
             )
           })
         }
       </select>
 
-      <h5>Description</h5>
-      <div>
-        {description}
-      </div>
+      {
+        // loadingProduct ?
+        // <div>Loading... </div> :
+        productId ?
+        listProduct.map((item,i)=> {
+          return(
+            <div className="">
+              <div>
+                <h5>Description</h5>
+                <div className="description">
+                <IoCart size={24} className="mr-2" />
+                  {item.description}
+                </div>                
+              </div>
 
-      <h5>Discount</h5>
-      <div>
-        {discount}%
-      </div>
+        <div className="list">
+          <h5 className="discount">Discount ({item.diskon}%)</h5>
+            <div>
+              <NumericFormat
+                disabled
+                className="price discount"
+                value={item.diskon/100 * item.harga}
+                thousandSeparator
+                fixedDecimalScale
+                prefix="Rp."
+                />
+                </div> 
+            </div>
+         
+          <div className="list">
+          <h5>Harga</h5>
+              <div>
+                <NumericFormat
+                  disabled
+                  className="price"
+                  value={item.harga}
+                  thousandSeparator
+                  fixedDecimalScale
+                  prefix="Rp."
+                  />
+              </div>
+          </div>
 
-      <h5>Harga</h5>
-      <div>
-        {price}
-      </div>
-
-      <h5>Total</h5>
-      <div>{price - discount/100 * price}</div>
-
+          <div className="list total-harga">
+          <h5 className="">Total Harga</h5>
+                <div>
+                  <NumericFormat
+                    disabled
+                    className="price"
+                    value={item.harga - item.diskon/100 * item.harga}
+                    thousandSeparator
+                    // fixedDecimalScale
+                    prefix="Rp."
+                    />
+                </div>
+          </div>
+        </div>
+          )
+        })
+        : null
+      }
     </form>
     </div>      
     </main>
