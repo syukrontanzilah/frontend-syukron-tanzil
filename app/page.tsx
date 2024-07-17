@@ -5,7 +5,6 @@ import { CountryType, HarborType, ProductType } from "./DataType";
 import { NumericFormat } from "react-number-format";
 import { IoCart } from "react-icons/io5";
 
-
 export default function Home() {
   const [listCountry, setListCountry] = useState<CountryType[]>([])
   const [countryName, setCountryName] = useState("");
@@ -55,7 +54,6 @@ export default function Home() {
     try{
       await axios.get(`${URLBarang}?filter=${encodeURIComponent(filterBarang)}`)
       .then((data)=> {
-        console.log("barang", data.data)
         const datanya = data.data
         if(
           harbourId !== null || 
@@ -116,7 +114,6 @@ export default function Home() {
           return element.nama_pelabuhan === e.target.value;
         })[0]
         setHarbourId(name.id_pelabuhan)
-        console.log('id pelabuhan', harbourId)
       }}
       >
       <option value={""} disabled>Pilih Pelabuhan..</option>
@@ -138,7 +135,6 @@ export default function Home() {
           return element.nama_barang === e.target.value;
         })[0]
         setProductId(name.id_barang);
-        console.log('id barang', productId)
       }}
       >
       <option value={""} disabled>Pilih barang..</option>
@@ -175,7 +171,8 @@ export default function Home() {
                 value={item.diskon/100 * item.harga}
                 thousandSeparator
                 fixedDecimalScale
-                prefix="Rp."
+                prefix="-Rp."
+                allowLeadingZeros
                 />
                 </div> 
             </div>
@@ -189,6 +186,7 @@ export default function Home() {
                   value={item.harga}
                   thousandSeparator
                   fixedDecimalScale
+                  allowLeadingZeros
                   prefix="Rp."
                   />
               </div>
@@ -199,10 +197,11 @@ export default function Home() {
                 <div>
                   <NumericFormat
                     disabled
-                    className="price"
+                    className="price font-bold"
                     value={item.harga - item.diskon/100 * item.harga}
                     thousandSeparator
-                    // fixedDecimalScale
+                    fixedDecimalScale
+                    allowLeadingZeros
                     prefix="Rp."
                     />
                 </div>
